@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>极速逃亡 - Parkour Runner</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===== 游戏画布 ===== -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- ===== 主菜单 ===== -->
+  <div id="menuScreen" class="screen active">
+    <div class="menu-container">
+      <h1 class="game-title">极速逃亡</h1>
+      <p class="game-subtitle">跑酷大冒险</p>
+      <!-- 模式选择 -->
+      <div class="mode-buttons" id="modeButtons"></div>
+      <div class="menu-buttons">
+        <button class="btn btn-primary" onclick="Game.startGame('endless')">开始游戏</button>
+        <button class="btn btn-secondary" onclick="Game.showScreen('characterScreen')">角色选择</button>
+        <button class="btn btn-secondary" onclick="Game.showScreen('shopScreen')">商店</button>
+        <button class="btn btn-secondary" onclick="Game.showScreen('leaderboardScreen')">排行榜</button>
+        <button class="btn btn-secondary" onclick="Game.showScreen('settingsScreen')">设置</button>
+      </div>
+      <div class="high-score-display">
+        <span>🏆 最高分: </span><span id="menuHighScore">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 角色选择 ===== -->
+  <div id="characterScreen" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="Game.showScreen('menuScreen')">← 返回</button>
+      <h2>角色选择</h2>
+    </div>
+    <div class="character-grid" id="characterGrid"></div>
+    <div class="coin-display">🪙 <span id="charCoinDisplay">0</span></div>
+  </div>
+
+  <!-- ===== 商店 ===== -->
+  <div id="shopScreen" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="Game.showScreen('menuScreen')">← 返回</button>
+      <h2>商店</h2>
+    </div>
+    <div class="shop-items" id="shopItems"></div>
+    <div class="coin-display">🪙 <span id="shopCoinDisplay">0</span></div>
+  </div>
+
+  <!-- ===== 排行榜 ===== -->
+  <div id="leaderboardScreen" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="Game.showScreen('menuScreen')">← 返回</button>
+      <h2>排行榜</h2>
+    </div>
+    <div class="leaderboard-list" id="leaderboardList"></div>
+  </div>
+
+  <!-- ===== 设置 ===== -->
+  <div id="settingsScreen" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="Game.showScreen('menuScreen')">← 返回</button>
+      <h2>设置</h2>
+    </div>
+    <div class="settings-list">
+      <div class="setting-item">
+        <span>背景音乐</span>
+        <label class="toggle">
+          <input type="checkbox" id="bgmToggle" checked onchange="Settings.toggleBGM()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <span>音效</span>
+        <label class="toggle">
+          <input type="checkbox" id="sfxToggle" checked onchange="Settings.toggleSFX()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <span>画质</span>
+        <select id="qualitySelect" onchange="Settings.changeQuality(this.value)">
+          <option value="high">高</option>
+          <option value="medium" selected>中</option>
+          <option value="low">低</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <span>触控灵敏度</span>
+        <input type="range" id="sensitivitySlider" min="1" max="5" value="3" oninput="Settings.changeSensitivity(this.value)">
+      </div>
+    </div>
+    <button class="btn btn-danger" onclick="Settings.resetAll()" style="margin: 20px auto; display: block;">重置所有数据</button>
+  </div>
+
+  <!-- ===== 游戏HUD ===== -->
+  <div id="hudScreen" class="screen">
+    <div class="hud-top">
+      <div class="hud-score" id="hudScore">0</div>
+      <div class="hud-coins">🪙 <span id="hudCoins">0</span></div>
+    </div>
+    <button class="hud-pause-btn" onclick="Game.pauseGame()">⏸</button>
+    <div class="hud-timer" id="hudTimer">⏱ 60s</div>
+    <div class="hud-event" id="hudEvent">🪙 金币雨</div>
+    <div class="hud-powerups" id="hudPowerups"></div>
+    <!-- 道具快捷使用栏 -->
+    <div class="hud-quick-items" id="hudQuickItems"></div>
+  </div>
+
+  <!-- ===== 暂停菜单 ===== -->
+  <div id="pauseScreen" class="screen">
+    <div class="pause-container">
+      <h2>游戏暂停</h2>
+      <button class="btn btn-primary" onclick="Game.resumeGame()">继续游戏</button>
+      <button class="btn btn-secondary" onclick="Game.restartGame()">重新开始</button>
+      <button class="btn btn-secondary" onclick="Game.quitToMenu()">返回主菜单</button>
+    </div>
+  </div>
+
+  <!-- ===== 游戏结束 ===== -->
+  <div id="gameOverScreen" class="screen">
+    <div class="gameover-container">
+      <h2 class="gameover-title">游戏结束</h2>
+      <div class="gameover-stats">
+        <div class="stat-row">
+          <span>🏃 距离</span>
+          <span id="finalDistance">0m</span>
+        </div>
+        <div class="stat-row">
+          <span>⭐ 得分</span>
+          <span id="finalScore">0</span>
+        </div>
+        <div class="stat-row">
+          <span>🪙 金币</span>
+          <span id="finalCoins">0</span>
+        </div>
+        <div class="stat-row highlight">
+          <span>🏆 最高分</span>
+          <span id="finalHighScore">0</span>
+        </div>
+        <div class="stat-row" id="newRecordRow" style="display:none;">
+          <span>🎉 新纪录!</span>
+          <span>NEW!</span>
+        </div>
+      </div>
+      <div class="gameover-buttons">
+        <button class="btn btn-primary" onclick="Game.restartGame()">再来一局</button>
+        <button class="btn btn-secondary" onclick="Game.quitToMenu()">返回主菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 游戏脚本 ===== -->
+  <script src="js/game.js"></script>
+</body>
+</html>
